@@ -1,0 +1,80 @@
+%option noyywrap
+
+%{
+#include <stdio.h>
+
+int line = 1;
+FILE *output;
+
+#define PRINT_TOKEN(type) \
+fprintf(output, "[L%-3d] %-18s -> \"%s\"\n", line, type, yytext);
+%}
+
+DIGIT      [0-9]
+LETTER     [a-zA-Z_$]
+ID         {LETTER}({LETTER}|{DIGIT})*
+
+%%
+
+"//".*                  { PRINT_TOKEN("LINECOMMENT"); }
+
+"/*"(.|\n)*"*/"         { PRINT_TOKEN("COMMENT"); }
+
+\"[^\"]*\"              { PRINT_TOKEN("STRINGLIT"); }
+
+\'[^\']\'               { PRINT_TOKEN("CHARLIT"); }
+
+[0-9]+\.[0-9]+          { PRINT_TOKEN("FLOATLIT"); }
+
+0[xX][0-9a-fA-F]+       { PRINT_TOKEN("HEXADECIMALLIT"); }
+
+0[bB][01]+              { PRINT_TOKEN("BINARYLIT"); }
+
+0[0-7]+                 { PRINT_TOKEN("OCTALLIT"); }
+
+[0-9]+                  { PRINT_TOKEN("INTEGERLIT"); }
+
+"int"|"float"|"double"|"char"|"if"|"else"|"while"|"for"|"return"|"void" { PRINT_TOKEN("KEYWORD"); }
+
+"=="|"!="|"<="|">="|"&&"|"||"|"++"|"--"|"+="|"-="|"*="|"/=" { PRINT_TOKEN("OPERATOR"); }
+
+{ID}                   { PRINT_TOKEN("IDENTIFIER"); }
+
+
+[+\-*/%<>=!&|^~?:]     { PRINT_TOKEN("OPERATOR"); }
+
+[(){}\[\];,\.]         { PRINT_TOKEN("SEPARATOR"); }
+
+[ \t\r]+               { }
+
+\n                     { line++; }
+
+.                      { PRINT_TOKEN("UNKNOWN"); }
+
+%%
+
+int main(int argc, char *argv[])
+{
+	char archivo[100];
+
+	printf("Ingresa el nombre del archivo: ");
+	scanf("%s", archivo);
+
+	yyin = fopen(archivo, "r");
+
+	if (!yyin) {
+		printf("No se pudo abrir el archivo\n");
+		return 1;
+	}
+
+	output = fopen("salida.txt", "w");
+
+	yylex();
+
+	fclose(yyin);
+	fclose(output);
+
+	printf("Tokens guardados en salida.txt\n");
+
+	return 0;
+}
