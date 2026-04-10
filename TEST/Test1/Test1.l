@@ -1,0 +1,26 @@
+%option noyywrap
+%{
+    #include <stdio.h>
+    #include <stdlib.h>
+%}
+
+%%
+[0-9]+        { printf("Numero entero reconocido: %s\n", yytext); }
+
+.             { 
+                if (yytext[0] == 27) {  
+                    printf("Fin del programa.\n");
+                    exit(0);
+                }
+              }
+
+\n            {  }
+
+%%
+
+int main()
+{
+    printf("Ingrese numeros enteros:\n");
+    yylex();
+    return 0;
+}
